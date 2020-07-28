@@ -32,7 +32,7 @@ public abstract class ApiNgOperations {
     protected final String PRICE_PROJECTION = "priceProjection";
     protected final String MATCH_PROJECTION = "matchProjection";
     protected final String ORDER_PROJECTION = "orderProjection";
-    protected final String locale = Locale.getDefault().toString();
+    protected final String locale = Locale.US.toString();
 
 	public abstract List<EventTypeResult> listEventTypes(MarketFilter filter, String appKey, String ssoId) throws APINGException;
 

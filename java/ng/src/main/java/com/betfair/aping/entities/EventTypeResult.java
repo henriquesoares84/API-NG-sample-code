@@ -18,5 +18,9 @@ public class EventTypeResult {
 	public void setMarketCount(int marketCount) {
 		this.marketCount = marketCount;
 	}
+	@Override
+	public String toString() {
+		return "EventTypeResult [eventType=" + eventType + ", marketCount=" + marketCount + "]";
+	}
 
 }

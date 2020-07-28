@@ -15,6 +15,7 @@ public class Runner {
 	private ExchangePrices ex;
 	private List<Order> orders;
 	private List<Match> matches;
+	private MarketBook marketBook;
 
 	public Long getSelectionId() {
 		return selectionId;
@@ -113,6 +114,14 @@ public class Runner {
 				+ getRemovalDate() + "," + "sp=" + getSp() + "," + "ex="
 				+ getEx() + "," + "orders=" + getOrders() + "," + "matches="
 				+ getMatches() + "," + "}";
+	}
+
+	public MarketBook getMarketBook() {
+		return marketBook;
+	}
+
+	public void setMarketBook(MarketBook marketBook) {
+		this.marketBook = marketBook;
 	}
 
 }

@@ -107,9 +107,9 @@ public class ApiNGDemo {
 
         if(jsonRpcRequest) {
             ApiNGJsonRpcDemo jsonRpcDemo = new ApiNGJsonRpcDemo();
-            jsonRpcDemo.start(applicationKey, sessionToken);
+//            jsonRpcDemo.start(applicationKey, sessionToken);
         } else {
-            ApiNGJRescriptDemo rescriptDemo = new ApiNGJRescriptDemo();
+            ApiNGJRescriptDemo2 rescriptDemo = new ApiNGJRescriptDemo2();
             rescriptDemo.start(applicationKey, sessionToken);
         }
     }
