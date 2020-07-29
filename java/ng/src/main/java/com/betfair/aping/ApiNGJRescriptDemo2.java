@@ -72,7 +72,7 @@ public class ApiNGJRescriptDemo2 {
     List<String> encontradosMaiorQueZero = new ArrayList<String>();
     Double piorPorcentagemGeral = 0d;
     Double melhorPorcentagemGeral = -5d;
-    List<String> encontradosMaiorQueZeroGeral = new ArrayList<String>();
+    int encontradosMaiorQueZeroGeral = 0;
     
     final List<Boolean> mercadosProcessados = new ArrayList<Boolean>();
 
@@ -84,8 +84,8 @@ public class ApiNGJRescriptDemo2 {
     		cont++;
     		start2(appKey, ssoid);
     		System.out.println(new Date() + " Já rodou " + cont + " vezes desde " + dataInicial);
-    		System.out.println("- encontradosMaiorQueZeroGeral: " + encontradosMaiorQueZeroGeral.size());
-    		adicionaApostaNoCSV("- encontradosMaiorQueZeroGeral: " + encontradosMaiorQueZeroGeral.size());
+    		System.out.println("- encontradosMaiorQueZeroGeral: " + encontradosMaiorQueZeroGeral);
+    		adicionaApostaNoCSV("- encontradosMaiorQueZeroGeral: " + encontradosMaiorQueZeroGeral);
     	}
     }
     public void start2(String appKey, String ssoid) {
@@ -223,12 +223,13 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
             
             if ( marketCatalogueResult.size() >= maxResultsNum) {
 	            while ( ultimaDataRecebida.before(calFim.getTime()) ) {
-	            	System.out.println("\n\n AINDA SERÃO ADICIONADOS MAIS MERCADOS A PARTIR DA DATA: " + ultimaDataRecebida + ".  ATÉ MOMENTO A QUANTIDADE É DE: " + markets.size());
+//	            	System.out.println("\n\n AINDA SERÃO ADICIONADOS MAIS MERCADOS A PARTIR DA DATA: " + ultimaDataRecebida + ".  ATÉ MOMENTO A QUANTIDADE É DE: " + markets.size());
+	            	System.out.println("Adicionando mais mercados a partir de  " + ultimaDataRecebida + ".  ATÉ MOMENTO A QUANTIDADE É DE: " + markets.size());
 	            	time.setFrom(ultimaDataRecebida);
 	            	marketFilter.setMarketStartTime(time);
 	            	marketCatalogueResult = rescriptOperations.listMarketCatalogue(marketFilter, marketProjection, MarketSort.FIRST_TO_START, maxResults,
 	                        applicationKey, sessionToken);
-	                System.out.println("marketCatalogueResult qtd: " + marketCatalogueResult.size());
+//	                System.out.println("marketCatalogueResult qtd: " + marketCatalogueResult.size());
 	                for (MarketCatalogue marketCatalogue : marketCatalogueResult) {
 //	    				System.out.println(marketCatalogue);
 //	    				printMarketCatalogue(marketCatalogue);
@@ -395,12 +396,12 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 					marketBookReturn = rescriptOperations.listMarketBook(marketIds, priceProjection,
 		                orderProjection, matchProjection, currencyCode, applicationKey, sessionToken);
 				} catch (Exception e) {
-					Thread.sleep(3000);
+					Thread.sleep(5000);
 					try {
 						marketBookReturn = rescriptOperations.listMarketBook(marketIds, priceProjection,
 			                orderProjection, matchProjection, currencyCode, applicationKey, sessionToken);
 					} catch (Exception e2) {
-						Thread.sleep(6000);
+						Thread.sleep(10000);
 						marketBookReturn = rescriptOperations.listMarketBook(marketIds, priceProjection,
 				                orderProjection, matchProjection, currencyCode, applicationKey, sessionToken);
 					}
@@ -553,10 +554,14 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 							
 							encontradosMaiorQueZero.add(betEncontrada);
 							
-//							String colunas = "dataEncontrado;evento;dataEvento;market1;opcao1;market2;opcao2;odds1;odds2;stake1;stakeDisponivel1;stake2;stakeDisponivel2";
+
+//							String colunas = "dataEncontrado;marketId;evento;pais;dataEvento;market1;opcao1;market2;opcao2;odds1;odds2;stake1;stakeDisponivel1;stake2;stakeDisponivel2;lucro;porcentagem_stake_50";
 							
+							double lucroEmReais = round(porcentagem, 2);
 							String linhaAposta = getDataEHoraAgora() 
+									+ ";" + marketCatalogueR1.getMarketId() 
 									+ ";" + marketCatalogueR1.getEvent().getName() 
+									+ ";" + marketCatalogueR1.getEvent().getCountryCode()
 									+ ";" + getDataFormatada(marketCatalogueR1.getEvent().getOpenDate())
 									+ ";" + marketCatalogueR1.getMarketName() 
 									+ ";" + runner1Opcao
@@ -568,9 +573,10 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 									+ ";" + odd1Size
 									+ ";" + stake2
 									+ ";" + odd2Size
+									+ ";" + lucroEmReais
+									+ ";" + (lucroEmReais * 100 / 50)
 									;
 							adicionaApostaNoCSVParaAuditoria(linhaAposta);
-							
 							
 								
 //								if ( stake1 < stake2) {
@@ -750,11 +756,6 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 		if ( melhorPorcentagem > melhorPorcentagemGeral ) {
 			melhorPorcentagemGeral = melhorPorcentagem.doubleValue();
 		}
-		
-		if (encontradosMaiorQueZero.size() > 0 ) {
-			encontradosMaiorQueZeroGeral.addAll(encontradosMaiorQueZero);
-		}
-		
 		
 		//FIM, vai pro próximo EVENTO
 	}
@@ -1134,10 +1135,13 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 			encontradosMaiorQueZero.add(betEncontrada);
 			
 			
-//			String colunas = "dataEncontrado;evento;dataEvento;market1;opcao1;market2;opcao2;odds1;odds2;stake1;stakeDisponivel1;stake2;stakeDisponivel2";
+//			String colunas = "dataEncontrado;marketId;evento;pais;dataEvento;market1;opcao1;market2;opcao2;odds1;odds2;stake1;stakeDisponivel1;stake2;stakeDisponivel2;lucro;porcentagem_stake_50";
 			
+			double lucroEmReais = round(porcentagem, 2);
 			String linhaAposta = getDataEHoraAgora() 
+					+ ";" + marketCatalogueR1.getMarketId() 
 					+ ";" + marketCatalogueR1.getEvent().getName() 
+					+ ";" + marketCatalogueR1.getEvent().getCountryCode()
 					+ ";" + getDataFormatada(marketCatalogueR1.getEvent().getOpenDate())
 					+ ";" + marketCatalogueR1.getMarketName() 
 					+ ";" + runner1Opcao
@@ -1149,6 +1153,8 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 					+ ";" + odd1Size
 					+ ";" + stake2
 					+ ";" + odd2Size
+					+ ";" + lucroEmReais
+					+ ";" + (lucroEmReais * 100 / 50)
 					;
 			adicionaApostaNoCSVParaAuditoria(linhaAposta);
 		}
@@ -1244,6 +1250,7 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
     }
     
     public void adicionaApostaNoCSVParaAuditoria(String texto) {
+    	encontradosMaiorQueZeroGeral++;
     	File file = new File ( "/home/henrique/betfair_apostas_encontradas.csv" );
     	boolean arquivoExiste = file.exists();
     	
@@ -1252,7 +1259,7 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
     		FileWriter  csvOutputFile = new FileWriter (file, true);
     		pw = new PrintWriter(csvOutputFile);
     		if ( !arquivoExiste ) {
-    			String colunas = "dataEncontrado;evento;dataEvento;market1;opcao1;market2;opcao2;odds1;odds2;stake1;stakeDisponivel1;stake2;stakeDisponivel2";
+    			String colunas = "dataEncontrado;marketId;evento;pais;dataEvento;market1;opcao1;market2;opcao2;odds1;odds2;stake1;stakeDisponivel1;stake2;stakeDisponivel2;lucro;porcentagem_stake_50";
     			pw.println(colunas);
     		}
     		pw.println(texto);
