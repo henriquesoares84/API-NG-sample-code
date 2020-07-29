@@ -1,5 +1,9 @@
 package com.betfair.aping;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -62,13 +66,36 @@ public class ApiNGJRescriptDemo2 {
 	DecimalFormat decimalFormat = new DecimalFormat("0.##");
 	
 	Integer customerRef = 12;
+	
+	Double piorPorcentagem = 0d;
+    Double melhorPorcentagem = -5d;
+    List<String> encontradosMaiorQueZero = new ArrayList<String>();
+    Double piorPorcentagemGeral = 0d;
+    Double melhorPorcentagemGeral = -5d;
+    List<String> encontradosMaiorQueZeroGeral = new ArrayList<String>();
+    
+    final List<Boolean> mercadosProcessados = new ArrayList<Boolean>();
 
     public void start(String appKey, String ssoid) {
+    	Date dataInicial = new Date();
+    	adicionaApostaNoCSV("Iniciando aplicação");
+    	int cont = 0;
+    	while ( true ) {
+    		cont++;
+    		start2(appKey, ssoid);
+    		System.out.println(new Date() + " Já rodou " + cont + " vezes desde " + dataInicial);
+    		System.out.println("- encontradosMaiorQueZeroGeral: " + encontradosMaiorQueZeroGeral.size());
+    		adicionaApostaNoCSV("- encontradosMaiorQueZeroGeral: " + encontradosMaiorQueZeroGeral.size());
+    	}
+    }
+    public void start2(String appKey, String ssoid) {
 
         this.applicationKey = appKey;
         this.sessionToken = ssoid;
 
         try {
+        	
+        	System.out.println("Iniciando em " + new Date());
 
             /**
              * ListEventTypes: Search for the event types and then for the "Horse Racing" in the returned list to finally get
@@ -78,14 +105,14 @@ public class ApiNGJRescriptDemo2 {
             marketFilter = new MarketFilter();
             Set<String> eventTypeIds = new HashSet<String>();
 
-            List<EventTypeResult> r = rescriptOperations.listEventTypes(marketFilter, applicationKey, sessionToken);
-            for (EventTypeResult eventTypeResult : r) {
-            	System.out.println(eventTypeResult);
-//                if(eventTypeResult.getEventType().getName().equals("ESports")){
-//                    System.out.println("EventTypeId is: " + eventTypeResult.getEventType().getId()+"\n");
-//                    eventTypeIds.add(eventTypeResult.getEventType().getId().toString());
-//                }
-            }
+//            List<EventTypeResult> r = rescriptOperations.listEventTypes(marketFilter, applicationKey, sessionToken);
+//            for (EventTypeResult eventTypeResult : r) {
+//            	System.out.println(eventTypeResult);
+////                if(eventTypeResult.getEventType().getName().equals("ESports")){
+////                    System.out.println("EventTypeId is: " + eventTypeResult.getEventType().getId()+"\n");
+////                    eventTypeIds.add(eventTypeResult.getEventType().getId().toString());
+////                }
+//            }
             
             /*
 EventTypeResult [eventType={id=1,name=Futebol}, marketCount=5701]
@@ -129,15 +156,15 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
             
             
             Date dataInicio = new Date();
-			try {
-				dataInicio = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse("28/07/2020 16:40:00");
-			} catch (ParseException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+//			try {
+//				dataInicio = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse("29/07/2020 14:20:00");
+//			} catch (ParseException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
 			
 			Calendar calFim = Calendar.getInstance();
-			calFim.add(Calendar.DAY_OF_MONTH, 5);
+			calFim.add(Calendar.DAY_OF_MONTH, 7);
 			
 			
 			Date ultimaDataRecebida = null;
@@ -151,9 +178,9 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
             marketFilter = new MarketFilter();
             marketFilter.setEventTypeIds(eventTypeIds);
             Set<String> eventIds = new HashSet<String>();
-            String idEventoSelecionado = "29929085";
+            String idEventoSelecionado = "29929982";
             eventIds.add(idEventoSelecionado);
-			marketFilter.setEventIds(eventIds );
+//			marketFilter.setEventIds(eventIds );
             marketFilter.setMarketStartTime(time);
             
             Set<String> marketIdsTemp = new HashSet<String>();
@@ -163,17 +190,19 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 //            marketFilter.setMarketTypeCodes(typesCode);
 
             Set<MarketProjection> marketProjection = new HashSet<MarketProjection>();
-            marketProjection.add(MarketProjection.COMPETITION);
+//            marketProjection.add(MarketProjection.COMPETITION);
             marketProjection.add(MarketProjection.EVENT);
             marketProjection.add(MarketProjection.EVENT_TYPE);
-            marketProjection.add(MarketProjection.MARKET_DESCRIPTION);
+//            marketProjection.add(MarketProjection.MARKET_DESCRIPTION);
             marketProjection.add(MarketProjection.RUNNER_DESCRIPTION);
-            marketProjection.add(MarketProjection.RUNNER_METADATA);
-            marketProjection.add(MarketProjection.MARKET_START_TIME);
+//            marketProjection.add(MarketProjection.RUNNER_METADATA);
+//            marketProjection.add(MarketProjection.MARKET_START_TIME);
 
-            String maxResults = "100";
+            Integer maxResultsNum = 500;
             
-            Map<String, Event> eventos = new LinkedHashMap<String, Event>();
+            String maxResults = maxResultsNum.toString();
+            
+            final Map<String, Event> eventos = new LinkedHashMap<String, Event>();
             
 
             		
@@ -181,8 +210,8 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
                     applicationKey, sessionToken);
             System.out.println("marketCatalogueResult qtd: " + marketCatalogueResult.size());
             for (MarketCatalogue marketCatalogue : marketCatalogueResult) {
-				System.out.println(marketCatalogue);
-				printMarketCatalogue(marketCatalogue);
+//				System.out.println(marketCatalogue);
+//				printMarketCatalogue(marketCatalogue);
 				markets.put(marketCatalogue.getMarketId(), marketCatalogue);
 				
 				ultimaDataRecebida = marketCatalogue.getEvent().getOpenDate();
@@ -192,7 +221,7 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 				}
 			}
             
-            if ( marketCatalogueResult.size() >= 1000) {
+            if ( marketCatalogueResult.size() >= maxResultsNum) {
 	            while ( ultimaDataRecebida.before(calFim.getTime()) ) {
 	            	System.out.println("\n\n AINDA SERÃO ADICIONADOS MAIS MERCADOS A PARTIR DA DATA: " + ultimaDataRecebida + ".  ATÉ MOMENTO A QUANTIDADE É DE: " + markets.size());
 	            	time.setFrom(ultimaDataRecebida);
@@ -201,8 +230,8 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 	                        applicationKey, sessionToken);
 	                System.out.println("marketCatalogueResult qtd: " + marketCatalogueResult.size());
 	                for (MarketCatalogue marketCatalogue : marketCatalogueResult) {
-	    				System.out.println(marketCatalogue);
-	    				printMarketCatalogue(marketCatalogue);
+//	    				System.out.println(marketCatalogue);
+//	    				printMarketCatalogue(marketCatalogue);
 	    				markets.put(marketCatalogue.getMarketId(), marketCatalogue);
 	    				ultimaDataRecebida = marketCatalogue.getEvent().getOpenDate();
 	    				if ( ultimaDataRecebida.after(calFim.getTime()) ) {
@@ -221,6 +250,8 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
             	eventos.put(marketCatalogue.getEvent().getId(), marketCatalogue.getEvent());
             }
             
+            System.out.println("Foram encontrados " + eventos.size() + " eventos agora." );
+            
             Map<String, List<MarketCatalogue>> mercadosPorEvento = new LinkedHashMap<String, List<MarketCatalogue>>();
             
             for (MarketCatalogue marketCatalogue : todosOsMercados) {
@@ -235,333 +266,94 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
             }
             
 
-            PriceProjection priceProjection = new PriceProjection();
+            final PriceProjection priceProjection = new PriceProjection();
             Set<PriceData> priceData = new HashSet<PriceData>();
-            priceData.add(PriceData.EX_BEST_OFFERS);
+            priceData.add(PriceData.EX_ALL_OFFERS);
             priceProjection.setPriceData(priceData);
 
             //In this case we don't need these objects so they are declared null
-            OrderProjection orderProjection = null;
-            MatchProjection matchProjection = null;
-            String currencyCode = null;
+            final OrderProjection orderProjection = null;
+            final MatchProjection matchProjection = null;
+            final String currencyCode = null;
             
             
-            Map<String, String> surebetTipos = new HashMap<String, String>();
+            final Map<String, Integer> threads = new HashMap<String, Integer>();
+            threads.put("qtd", 0);
             
-            surebetTipos.put("Under 0.5 Goals", "");
-            
-            
-            
-            Double piorPorcentagem = 0d;
-            Double melhorPorcentagem = -5d;
-            
-            List<String> encontradosMaiorQueZero = new ArrayList<String>();
-            
-            int cont = 0;
             Set<Entry<String, List<MarketCatalogue>>> mercadosPorEventoChaveEValor = mercadosPorEvento.entrySet();
-            for (Entry<String, List<MarketCatalogue>> lista : mercadosPorEventoChaveEValor) {
-				Event eventoEmProcessamento = eventos.get(lista.getKey());
-				System.out.println("Processando evento id: " + eventoEmProcessamento.getId() + " Nome: " + eventoEmProcessamento.getName() + " Data: " + eventoEmProcessamento.getOpenDate());
-				
-				Map<String, List<Runner>> mapaTipos = new HashMap<String, List<Runner>>();
-				
-				String nomeEventoAtual = eventoEmProcessamento.getName();
-				String nomeTime1 = nomeEventoAtual.split(" v ")[0].trim();
-				String nomeTime2 = nomeEventoAtual.split(" v ")[1].trim();
-				
-				for (MarketCatalogue marketCatalogue : lista.getValue()) {
+            
+            List<Thread> todasAsThreads = new ArrayList<Thread>();
+            
+            mercadosProcessados.clear();
+            
+            for (final Entry<String, List<MarketCatalogue>> lista : mercadosPorEventoChaveEValor) {
+            	Thread threadTemp = new Thread(new Runnable() {
 					
-	            	try {
-		            	cont++;
-		            	System.out.println("\n\n\n MERCADO: " + cont + "    de " + markets.size());
-		            	System.out.println("piorPorcentagem: " + piorPorcentagem + " e melhorPorcentagem: " + melhorPorcentagem);
-						printMarketCatalogue(marketCatalogue);
-		
-			            List<String> marketIds = new ArrayList<String>();
-						marketIds.add(marketCatalogue.getMarketId());
-						
-			            List<MarketBook> marketBookReturn = rescriptOperations.listMarketBook(marketIds, priceProjection,
-			                    orderProjection, matchProjection, currencyCode, applicationKey, sessionToken);
-		
-			            System.out.println("\n\n ----- market books! ----");
-			            for (MarketBook marketBook : marketBookReturn) {
-			            	MarketCatalogue marketAtual = markets.get(marketBook.getMarketId());
-							
-							List<Runner> runners = marketBook.getRunners();
-							for (Runner runner : runners) {
-								runner.setMarketBook(marketBook);
-							}
-							
-							List<RunnerCatalog> runnerCatalogs = marketCatalogue.getRunners();
-							
-							
-							mapaTipos.put(marketAtual.getMarketName(), runners);
-							
-							
-							if ( runners.size() == 2 ) {
-								System.out.println("\n\n ----- market: ----");
-								System.out.println(marketBook);
-								System.out.println(marketAtual);
-								printMarketCatalogue(marketAtual);
-								for (Runner runner : runners) {
-									System.out.println(runner);
-									if ( runner.getHandicap() != null ) {
-										System.out.println("Handicap: " + runner.getHandicap() + " Preço: " + runner.getLastPriceTraded());
-										RunnerCatalog runnerCatalogAtual = getRunnerCatalog(runnerCatalogs, runner);
-										System.out.println("Exibindo preços para a opção id: " + runnerCatalogAtual.getSelectionId() + " nome: " + runnerCatalogAtual.getRunnerName()); 
-										ExchangePrices ex = runner.getEx();
-										for (PriceSize priceSize : ex.getAvailableToBack()) {
-											System.out.println("Preço: " + priceSize.getPrice() + " Size: " + priceSize.getSize());
-										}
-		//								List<PriceSize> avLay = ex.getAvailableToLay();
-										
-									}
-								}
-								
-								Double odd1TopoDaLista = null;
-								Double odd2TopoDaLista = null;
-								
-								Double odd1Size = null;
-								Double odd2Size = null;
-								
-								Runner runner1 = runners.get(0);
-								Runner runner2 = runners.get(1);
-								Double porcentagem = 0d;
-									
-								if ( runner1.getEx() != null 
-										&& runner1.getEx().getAvailableToBack() != null
-										&& runner1.getEx().getAvailableToBack().size() > 0) {
-									odd1TopoDaLista = runner1.getEx().getAvailableToBack().get(0).getPrice();
-									odd1Size = runner1.getEx().getAvailableToBack().get(0).getSize();
-								}
-								if ( runner2.getEx() != null 
-										&& runner2.getEx().getAvailableToBack() != null
-										&& runner2.getEx().getAvailableToBack().size() > 0) {
-									odd2TopoDaLista = runner2.getEx().getAvailableToBack().get(0).getPrice();
-									odd2Size = runner2.getEx().getAvailableToBack().get(0).getSize();
-								}
-								
-								if ( odd1TopoDaLista == null || odd2TopoDaLista == null ) {
-									System.out.println("Faltou oferta");
-									continue;
-								}
-								
-								System.out.println("Odds - odd1TopoDaLista: " + odd1TopoDaLista +
-										" odd2TopoDaLista: " + odd2TopoDaLista);
-								
-								Double stake = 50d; 
-								Double odd1 = odd1TopoDaLista;
-								Double odd2 = odd2TopoDaLista;
-								Double stake1 = round(stake-((odd1*stake)/(odd1+odd2)), 2);
-								Double stake2 = round(stake-((odd2*stake)/(odd1+odd2)), 2);
-								
-								System.out.println(" stake1: " + stake1 + " odd1Size: " + odd1Size 
-										+ " stake2: " + stake2 + " odd2Size: " + odd2Size);
-								
-								if ( stake1 > odd1Size || stake2 > odd2Size ) {
-									System.out.println(" Não tem saldo diponsível para apostarmos mais. ");
-									continue;
-								}
-								
-								Double porcentagem1 = (stake1*odd1)-stake;
-								Double porcentagem2 = (stake2*odd2)-stake;
-								System.out.println("Porcentagem 1: " + porcentagem1 + " Porcentagem2: " + porcentagem2 +
-										" stake1: " + stake1 + " stake2: " + stake2);
-								porcentagem = porcentagem1 < porcentagem2 ? porcentagem1 : porcentagem2;
-								System.out.println("SUREBET Porcentagem: " + decimalFormat.format(porcentagem));
-								
-								if ( porcentagem < piorPorcentagem ) {
-									piorPorcentagem = porcentagem;
-								}
-								if ( porcentagem > melhorPorcentagem ) {
-									melhorPorcentagem = porcentagem;
-								}
-								
-								if ( porcentagem > 0.2 ) {
-									
-									System.out.println("FAZENDO BETTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
-									System.out.println("Stake1: " + stake1);
-									System.out.println("Stake2: " + stake2);
-									
-									String betEncontrada = "\n\nMarketId = " + marketAtual.getMarketId() + " name = " + marketAtual.getMarketName() 
-													+ "\n Event: " + marketAtual.getEvent() 
-													+ "\nPorcentagem 1: " + porcentagem1 + " Porcentagem2: " + porcentagem2 +
-													" stake1: " + stake1 + " stake2: " + stake2  + " odd1Size: " + odd1Size + " odd2Size: " + odd2Size;
-									
-									encontradosMaiorQueZero.add(betEncontrada);
-										
-	//								if ( stake1 < stake2) {
-	//						            apostar(marketBook, runner1, stake1, customerRef.toString());
-	//						            customerRef++;
-	//						            apostar(marketBook, runner2, stake2, customerRef.toString());
-	//								} else {
-	//									apostar(marketBook, runner2, stake2, customerRef.toString());
-	//									customerRef++;
-	//									apostar(marketBook, runner1, stake1, customerRef.toString());
-	//									
-	//								}
-					                
-									
-									
-									
-									
-								}
-							} else {
-								
-								if ( marketAtual.getMarketName().equalsIgnoreCase("Asian Handicap") ) {
-									System.out.println("Achou Asian Handicap");
-								}
-								
-								for (Runner runner : runners) {
-									System.out.println(runner);
-									if ( runner.getHandicap() != null ) {
-										System.out.println("Handicap: " + runner.getHandicap() + " Preço: " + runner.getLastPriceTraded());
-										RunnerCatalog runnerCatalogAtual = getRunnerCatalog(runnerCatalogs, runner);
-										System.out.println("Exibindo preços para a opção id: " + runnerCatalogAtual.getSelectionId() + " nome: " + runnerCatalogAtual.getRunnerName());
-										ExchangePrices ex = runner.getEx();
-										for (PriceSize priceSize : ex.getAvailableToBack()) {
-											System.out.println("Preço: " + priceSize.getPrice() + " Size: " + priceSize.getSize());
-										}
-		//								List<PriceSize> avLay = ex.getAvailableToLay();
-										
-									}
-								}
-							}
+					@Override
+					public void run() {
+						try {
+							processaEvento(eventos, priceProjection, lista);
+							threads.put("qtd", threads.get("qtd") - 1);
+						} catch (APINGException e) {
+							threads.put("qtd", threads.get("qtd") - 1);
+							e.printStackTrace();
 						}
-	            	} catch (Exception e) {
-						e.printStackTrace();
-						System.out.println("Erro.. passando pro próximo...");
+						
 					}
-	            } //terminou de rodar todos os mercados do evento
-				
-				//TODO: Comparar possíveis Mercados
-				
-				
-				getTimeCleanSheet(mapaTipos, nomeTime1, "yes");
-				getTimeCleanSheet(mapaTipos, nomeTime1, "no");
-				getTimeCleanSheet(mapaTipos, nomeTime2, "yes");
-				getTimeCleanSheet(mapaTipos, nomeTime2, "no");
-				
-				getOverUnderGoals(mapaTipos, "1.5", "over");
-				getOverUnderGoals(mapaTipos, "1.5", "under");
-				
-				getTimeWinToNil(mapaTipos, nomeTime1, "yes");
-				getTimeWinToNil(mapaTipos, nomeTime1, "no");
-				getTimeWinToNil(mapaTipos, nomeTime2, "yes");
-				getTimeWinToNil(mapaTipos, nomeTime2, "no");
-				
-				getMatchOddsAndBTTS(mapaTipos, "time1-yes");
-				getMatchOddsAndBTTS(mapaTipos, "time2-yes");
-				getMatchOddsAndBTTS(mapaTipos, "draw-yes");
-				getMatchOddsAndBTTS(mapaTipos, "time1-no");
-				getMatchOddsAndBTTS(mapaTipos, "time2-no");
-				getMatchOddsAndBTTS(mapaTipos, "draw-no");
-				
-				getNextGoal(mapaTipos, "time1");
-				getNextGoal(mapaTipos, "time2");
-				getNextGoal(mapaTipos, "no-goal");
-				
-				getBtts(mapaTipos, "yes");
-				getBtts(mapaTipos, "no");
-				
-				getOddOrEven(mapaTipos, "odd");
-				getOddOrEven(mapaTipos, "even");
-				
-				getCorrectScore(mapaTipos, "0 - 0");
-				getCorrectScore(mapaTipos, "0 - 1");
-				
-				
-				
-				System.out.println("VERIFICANDO getCorrectScore(mapaTipos, \"0 - 0\")   x   getOverUnderGoals(mapaTipos, \"0.5\", \"over\")");
-				verificaSurebetEAposta(getCorrectScore(mapaTipos, "0 - 0"), getOverUnderGoals(mapaTipos, "0.5", "over"));
-				
-//				System.out.println("VERIFICANDO getTimeCleanSheet(mapaTipos, nomeTime1, \"yes\")   x   getBtts(mapaTipos, \"yes\")");
-//				verificaSurebetEAposta(getTimeCleanSheet(mapaTipos, nomeTime1, "yes"), getBtts(mapaTipos, "yes"));
-//				System.out.println("VERIFICANDO getTimeCleanSheet(mapaTipos, nomeTime2, \"yes\")   x   getBtts(mapaTipos, \"yes\")");
-//				verificaSurebetEAposta(getTimeCleanSheet(mapaTipos, nomeTime2, "yes"), getBtts(mapaTipos, "yes"));
-				
-				
-//				System.out.println("VERIFICANDO getTimeWinToNil(mapaTipos, nomeTime1, \"yes\")   x   getBtts(mapaTipos, \"yes\")");
-//				verificaSurebetEAposta(getTimeWinToNil(mapaTipos, nomeTime1, "yes"), getBtts(mapaTipos, "yes"));
-//				System.out.println("VERIFICANDO getTimeWinToNil(mapaTipos, nomeTime2, \"yes\")   x   getBtts(mapaTipos, \"yes\")");
-//				verificaSurebetEAposta(getTimeWinToNil(mapaTipos, nomeTime2, "yes"), getBtts(mapaTipos, "yes"));
-				
-				System.out.println("VERIFICANDO getMatchOddsAndBTTS(mapaTipos, \"draw-no\")   x   getOverUnderGoals(mapaTipos, \"0.5\", \"over\")");
-				verificaSurebetEAposta(getMatchOddsAndBTTS(mapaTipos, "draw-no"), getOverUnderGoals(mapaTipos, "0.5", "over"));
-				
-				System.out.println("VERIFICANDO getBtts(mapaTipos, \"no\")   x   getOverUnderGoals(mapaTipos, \"0.5\", \"over\")");
-				verificaSurebetEAposta(getBtts(mapaTipos, "no"), getOverUnderGoals(mapaTipos, "0.5", "over"));
-				
-				System.out.println("VERIFICANDO getNextGoal(mapaTipos, \"no-goal\")   x   getOverUnderGoals(mapaTipos, \"0.5\", \"over\")");
-				verificaSurebetEAposta(getNextGoal(mapaTipos, "no-goal"), getOverUnderGoals(mapaTipos, "0.5", "over"));
-				
-//				System.out.println("VERIFICANDO getOddOrEven(mapaTipos, \"even\")   x   getOverUnderGoals(mapaTipos, \"0.5\", \"over\")");
-//				verificaSurebetEAposta(getOddOrEven(mapaTipos, "even"), getOverUnderGoals(mapaTipos, "0.5", "under"));
-				
-				
-				
-				/*Exemplo no jogo Inter x Napoli:
-				 *  Mercado: Inter +1
-				 *  Inter +1
-				 *  Napoli -1
-				 *  Draw
-				 */
-				getEuropeanHandicap(mapaTipos, nomeTime1 + " +1", nomeTime1 + " +1");
-				
-				
-				
-				
-				//FIM, vai pro próximo EVENTO
-				
-				
+				});
+            	
+            	while ( threads.get("qtd") > 70 ) {
+            		try {
+						Thread.sleep(2000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+            	}
+            	
+            	threads.put("qtd", threads.get("qtd") + 1);
+        		threadTemp.start();
+        		todasAsThreads.add(threadTemp);
+            	
 	        }
             
+//            int contFinal = 0;
+//            while ( threads.get("qtd") > 0 && contFinal < 180 ) {
+//        		try {
+//        			contFinal++;
+//					Thread.sleep(1000);
+//					System.out.println("Aguardando o término: " + contFinal);
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
+//        	}
+            boolean temThreadAtiva = true;
+            while ( temThreadAtiva ) {
+            	int contT = 0;
+            	temThreadAtiva = false;
+            	for (Thread thread : todasAsThreads) {
+					if ( thread.isAlive() ) {
+						contT++;
+						temThreadAtiva = true;
+					}
+				}
+            	if ( temThreadAtiva ) {
+            		System.out.println("Ainda tem " + contT + " threads ativas. ");
+            		try {
+						Thread.sleep(5000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+            	}
+            }
+            
             System.out.println("\n\n\n\n RESULTADO FINAL - Encontrados: " + encontradosMaiorQueZero.size());
+            System.out.println("piorPorcentagem: " + piorPorcentagem + " e melhorPorcentagem: " + melhorPorcentagem);
+            
             for (String bet : encontradosMaiorQueZero) {
 				System.out.println(bet);
 			}
             
-            System.out.println("FIM");
-            if(true) return;
-
-//            long selectionId = 0;
-//            if ( marketBookReturn.size() != 0 ) {
-//                Runner runner = marketBookReturn.get(0).getRunners().get(0);
-//                selectionId = runner.getSelectionId();
-//                System.out.println("7. Place a bet below minimum stake to prevent the bet actually " +
-//                        "being placed for marketId: "+marketIdChosen+" with selectionId: "+selectionId+"...\n\n");
-//                List<PlaceInstruction> instructions = new ArrayList<PlaceInstruction>();
-//                PlaceInstruction instruction = new PlaceInstruction();
-//                instruction.setHandicap(0);
-//                instruction.setSide(Side.BACK);
-//                instruction.setOrderType(OrderType.LIMIT);
-//
-//                LimitOrder limitOrder = new LimitOrder();
-//                limitOrder.setPersistenceType(PersistenceType.LAPSE);
-//                //API-NG will return an error with the default size=0.01. This is an expected behaviour.
-//                //You can adjust the size and price value in the "apingdemo.properties" file
-//                limitOrder.setPrice(getPrice());
-//                limitOrder.setSize(getSize());
-//
-//                instruction.setLimitOrder(limitOrder);
-//                instruction.setSelectionId(selectionId);
-//                instructions.add(instruction);
-//
-//                String customerRef = "1";
-//
-//                PlaceExecutionReport placeBetResult = rescriptOperations.placeOrders(marketIdChosen, instructions, customerRef, applicationKey, sessionToken);
-//
-//                // Handling the operation result
-//                if (placeBetResult.getStatus() == ExecutionReportStatus.SUCCESS) {
-//                    System.out.println("Your bet has been placed!!");
-//                    System.out.println(placeBetResult.getInstructionReports());
-//                } else if (placeBetResult.getStatus() == ExecutionReportStatus.FAILURE) {
-//                    System.out.println("Your bet has NOT been placed :*( ");
-//                    System.out.println("The error is: " + placeBetResult.getErrorCode() + ": " + placeBetResult.getErrorCode().getMessage());
-//                }
-//            } else {
-//                System.out.println("Sorry, no runners found\n\n");
-//            }
+            System.out.println("FIM: " + new Date());
 
         } catch (APINGException apiExc) {
             System.out.println(apiExc.toString());
@@ -570,6 +362,405 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 
 
 
+	private void processaEvento(Map<String, Event> eventos, PriceProjection priceProjection,
+			Entry<String, List<MarketCatalogue>> lista) throws APINGException {
+		OrderProjection orderProjection = null;
+        MatchProjection matchProjection = null;
+        String currencyCode = null;
+		Event eventoEmProcessamento = eventos.get(lista.getKey());
+		System.out.println("Processando evento id: " + eventoEmProcessamento.getId() + " Nome: " + eventoEmProcessamento.getName() + " Data: " + eventoEmProcessamento.getOpenDate());
+		
+		Map<String, List<Runner>> mapaTipos = new HashMap<String, List<Runner>>();
+		
+		piorPorcentagem = 0d;
+		melhorPorcentagem = -5d;
+		encontradosMaiorQueZero = new ArrayList<String>();
+		
+		int contMercadoDentroDoEvento = 0;
+		
+		List<MarketCatalogue> listaDeMercadosDentroDoEvento = lista.getValue();
+		for (MarketCatalogue marketCatalogue : listaDeMercadosDentroDoEvento) {
+			contMercadoDentroDoEvento++;
+			try {
+				mercadosProcessados.add(true);
+		    	System.out.println("\n\n\n MERCADO: " + mercadosProcessados.size() + "    de " + markets.size() + "                            mercado no evento: " + contMercadoDentroDoEvento + " de " + listaDeMercadosDentroDoEvento.size());
+		    	System.out.println("piorPorcentagem: " + piorPorcentagem + " e melhorPorcentagem: " + melhorPorcentagem);
+//				printMarketCatalogue(marketCatalogue);
+
+		        List<String> marketIds = new ArrayList<String>();
+				marketIds.add(marketCatalogue.getMarketId());
+				
+				List<MarketBook> marketBookReturn = null;
+				try {
+					marketBookReturn = rescriptOperations.listMarketBook(marketIds, priceProjection,
+		                orderProjection, matchProjection, currencyCode, applicationKey, sessionToken);
+				} catch (Exception e) {
+					Thread.sleep(3000);
+					try {
+						marketBookReturn = rescriptOperations.listMarketBook(marketIds, priceProjection,
+			                orderProjection, matchProjection, currencyCode, applicationKey, sessionToken);
+					} catch (Exception e2) {
+						Thread.sleep(6000);
+						marketBookReturn = rescriptOperations.listMarketBook(marketIds, priceProjection,
+				                orderProjection, matchProjection, currencyCode, applicationKey, sessionToken);
+					}
+				}
+
+//		        System.out.println("\n\n ----- market books! ----");
+		        for (MarketBook marketBook : marketBookReturn) {
+		        	MarketCatalogue marketAtual = markets.get(marketBook.getMarketId());
+					
+					List<Runner> runners = marketBook.getRunners();
+					for (Runner runner : runners) {
+						runner.setMarketBook(marketBook);
+					}
+					
+					List<RunnerCatalog> runnerCatalogs = marketCatalogue.getRunners();
+					
+					
+					mapaTipos.put(marketAtual.getMarketName(), runners);
+					
+					
+					if ( runners.size() == 2 ) {
+//						System.out.println("\n\n ----- market: ----");
+//						System.out.println(marketBook);
+//						System.out.println(marketAtual);
+//						printMarketCatalogue(marketAtual);
+						for (Runner runner : runners) {
+//							System.out.println(runner);
+							if ( runner.getHandicap() != null ) {
+//								System.out.println("Handicap: " + runner.getHandicap() + " Preço: " + runner.getLastPriceTraded());
+								RunnerCatalog runnerCatalogAtual = getRunnerCatalog(runnerCatalogs, runner);
+//								System.out.println("Exibindo preços para a opção id: " + runnerCatalogAtual.getSelectionId() + " nome: " + runnerCatalogAtual.getRunnerName()); 
+								ExchangePrices ex = runner.getEx();
+								for (PriceSize priceSize : ex.getAvailableToBack()) {
+//									System.out.println("Preço: " + priceSize.getPrice() + " Size: " + priceSize.getSize());
+								}
+//								List<PriceSize> avLay = ex.getAvailableToLay();
+								
+							}
+						}
+						
+						Double odd1TopoDaLista = null;
+						Double odd2TopoDaLista = null;
+						
+						Double odd1Size = null;
+						Double odd2Size = null;
+						
+						Runner runner1 = runners.get(0);
+						Runner runner2 = runners.get(1);
+						Double porcentagem = 0d;
+							
+						if ( runner1.getEx() != null 
+								&& runner1.getEx().getAvailableToBack() != null
+								&& runner1.getEx().getAvailableToBack().size() > 0) {
+							odd1TopoDaLista = runner1.getEx().getAvailableToBack().get(0).getPrice();
+							odd1Size = runner1.getEx().getAvailableToBack().get(0).getSize();
+						}
+						if ( runner2.getEx() != null 
+								&& runner2.getEx().getAvailableToBack() != null
+								&& runner2.getEx().getAvailableToBack().size() > 0) {
+							odd2TopoDaLista = runner2.getEx().getAvailableToBack().get(0).getPrice();
+							odd2Size = runner2.getEx().getAvailableToBack().get(0).getSize();
+						}
+						
+						if ( odd1TopoDaLista == null || odd2TopoDaLista == null ) {
+							System.out.println("Faltou oferta");
+							continue;
+						}
+						
+						System.out.println("Odds - odd1TopoDaLista: " + odd1TopoDaLista +
+								" odd2TopoDaLista: " + odd2TopoDaLista);
+						
+						Double stake = 50d; 
+						Double odd1 = odd1TopoDaLista;
+						Double odd2 = odd2TopoDaLista;
+						Double stake1 = round(stake-((odd1*stake)/(odd1+odd2)), 2);
+						Double stake2 = round(stake-((odd2*stake)/(odd1+odd2)), 2);
+						
+						System.out.println(" stake1: " + stake1 + " odd1Size: " + odd1Size 
+								+ " stake2: " + stake2 + " odd2Size: " + odd2Size);
+						
+						if ( stake1 > odd1Size || stake2 > odd2Size ) {
+							System.out.println(" Não tem saldo diponsível para apostarmos mais. ");
+							continue;
+						}
+						
+						Double porcentagem1 = (stake1*odd1)-stake;
+						Double porcentagem2 = (stake2*odd2)-stake;
+						System.out.println("Porcentagem 1: " + porcentagem1 + " Porcentagem2: " + porcentagem2 +
+								" stake1: " + stake1 + " stake2: " + stake2);
+						porcentagem = porcentagem1 < porcentagem2 ? porcentagem1 : porcentagem2;
+						System.out.println("SUREBET Porcentagem: " + decimalFormat.format(porcentagem));
+						
+						if ( porcentagem < piorPorcentagem ) {
+							piorPorcentagem = porcentagem;
+						}
+						if ( porcentagem > melhorPorcentagem ) {
+							melhorPorcentagem = porcentagem;
+						}
+						
+						if ( porcentagem > 0 ) {
+							
+							System.out.println("FAZENDO BETTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
+							System.out.println("Stake1: " + stake1);
+							System.out.println("Stake2: " + stake2);
+							
+							
+
+
+							MarketBook marketBookR1 = runner1.getMarketBook();
+							MarketCatalogue marketCatalogueR1 = markets.get(marketBookR1.getMarketId());
+							MarketBook marketBookR2 = runner2.getMarketBook();
+							MarketCatalogue marketCatalogueR2 = markets.get(marketBookR2.getMarketId());
+							
+							String runner1Opcao = "";
+							for (RunnerCatalog runnerCatalog : marketCatalogueR1.getRunners()) {
+								if ( runner1.getSelectionId().longValue() == runnerCatalog.getSelectionId().longValue() ) {
+									runner1Opcao = runnerCatalog.getRunnerName();
+									System.out.println("runner 1: " + runner1Opcao);
+									break;
+								}
+							}
+							
+							String runner2Opcao = "";
+							for (RunnerCatalog runnerCatalog : marketCatalogueR2.getRunners()) {
+								if ( runner2.getSelectionId().longValue() == runnerCatalog.getSelectionId().longValue() ) {
+									runner2Opcao = runnerCatalog.getRunnerName();
+									System.out.println("runner 2: " + runner2Opcao);
+									break;
+								}
+							}
+							
+							
+							String betEncontrada = "\n\nMarketId R1 = " + marketCatalogueR1.getMarketId() + " market R1 = " + marketCatalogueR1.getMarketName() + " (opção: " + runner1Opcao + ")"
+											+ "      x     " + "MarketId R2 = " + marketCatalogueR2.getMarketId() + " market R2 = " + marketCatalogueR2.getMarketName() + " (opção: " + runner2Opcao + ")" 
+											+ "\n Event: " + marketCatalogueR1.getEvent() 
+											+ "\nPorcentagem 1: " + porcentagem1 + " Porcentagem2: " + porcentagem2 +
+											" stake1: " + stake1 + " stake2: " + stake2  + " odd1Size: " + odd1Size + " odd2Size: " + odd2Size;
+							
+							System.out.println("Preços R1: " + marketCatalogueR1.getMarketName() + " (opção: " + runner1Opcao + ")");
+							for (PriceSize priceSize : runner1.getEx().getAvailableToBack()) {
+								System.out.println("Preço: " + priceSize.getPrice() + " Size: " + priceSize.getSize());
+							}
+							
+							System.out.println("Preços R2: " + marketCatalogueR2.getMarketName() + " (opção: " + runner2Opcao + ")");
+							for (PriceSize priceSize : runner2.getEx().getAvailableToBack()) {
+								System.out.println("Preço: " + priceSize.getPrice() + " Size: " + priceSize.getSize());
+							}
+							
+							adicionaApostaNoCSV(betEncontrada);
+							
+							encontradosMaiorQueZero.add(betEncontrada);
+							
+//							String colunas = "dataEncontrado;evento;dataEvento;market1;opcao1;market2;opcao2;odds1;odds2;stake1;stakeDisponivel1;stake2;stakeDisponivel2";
+							
+							String linhaAposta = getDataEHoraAgora() 
+									+ ";" + marketCatalogueR1.getEvent().getName() 
+									+ ";" + getDataFormatada(marketCatalogueR1.getEvent().getOpenDate())
+									+ ";" + marketCatalogueR1.getMarketName() 
+									+ ";" + runner1Opcao
+									+ ";" + marketCatalogueR2.getMarketName() 
+									+ ";" + runner2Opcao
+									+ ";" + odd1
+									+ ";" + odd2
+									+ ";" + stake1
+									+ ";" + odd1Size
+									+ ";" + stake2
+									+ ";" + odd2Size
+									;
+							adicionaApostaNoCSVParaAuditoria(linhaAposta);
+							
+							
+								
+//								if ( stake1 < stake2) {
+//						            apostar(marketBook, runner1, stake1, customerRef.toString());
+//						            customerRef++;
+//						            apostar(marketBook, runner2, stake2, customerRef.toString());
+//								} else {
+//									apostar(marketBook, runner2, stake2, customerRef.toString());
+//									customerRef++;
+//									apostar(marketBook, runner1, stake1, customerRef.toString());
+//									
+//								}
+			                
+							
+							
+							
+							
+						}
+					} else {
+						
+						
+						for (Runner runner : runners) {
+							System.out.println(runner);
+							if ( runner.getHandicap() != null ) {
+								System.out.println("Handicap: " + runner.getHandicap() + " Preço: " + runner.getLastPriceTraded());
+								RunnerCatalog runnerCatalogAtual = getRunnerCatalog(runnerCatalogs, runner);
+								System.out.println("Exibindo preços para a opção id: " + runnerCatalogAtual.getSelectionId() + " nome: " + runnerCatalogAtual.getRunnerName());
+								ExchangePrices ex = runner.getEx();
+								for (PriceSize priceSize : ex.getAvailableToBack()) {
+									System.out.println("Preço: " + priceSize.getPrice() + " Size: " + priceSize.getSize());
+								}
+//								List<PriceSize> avLay = ex.getAvailableToLay();
+								
+							}
+						}
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("Erro.. passando pro próximo...");
+			}
+		} //terminou de rodar todos os mercados do evento
+		
+		//TODO: Comparar possíveis Mercados
+		
+		System.out.println("\n\n\n ---------------------------------------------------------------------");
+		System.out.println("SUREBETS COMBINADAS");
+		System.out.println(" --------------------------------------------------------------------- \n\n");
+		
+		String nomeEventoAtual = eventoEmProcessamento.getName();
+		if ( nomeEventoAtual.indexOf(" v ") < 0 ) {
+			return;
+		}
+		String nomeTime1 = nomeEventoAtual.split(" v ")[0].trim();
+		String nomeTime2 = nomeEventoAtual.split(" v ")[1].trim();
+		
+//				getTimeCleanSheet(mapaTipos, nomeTime1, "yes");
+//				getTimeCleanSheet(mapaTipos, nomeTime1, "no");
+//				getTimeCleanSheet(mapaTipos, nomeTime2, "yes");
+//				getTimeCleanSheet(mapaTipos, nomeTime2, "no");
+//				
+//				getOverUnderGoals(mapaTipos, "1.5", "over");
+//				getOverUnderGoals(mapaTipos, "1.5", "under");
+//				
+//				getTimeWinToNil(mapaTipos, nomeTime1, "yes");
+//				getTimeWinToNil(mapaTipos, nomeTime1, "no");
+//				getTimeWinToNil(mapaTipos, nomeTime2, "yes");
+//				getTimeWinToNil(mapaTipos, nomeTime2, "no");
+//				
+//				getMatchOddsAndBTTS(mapaTipos, "time1-yes");
+//				getMatchOddsAndBTTS(mapaTipos, "time2-yes");
+//				getMatchOddsAndBTTS(mapaTipos, "draw-yes");
+//				getMatchOddsAndBTTS(mapaTipos, "time1-no");
+//				getMatchOddsAndBTTS(mapaTipos, "time2-no");
+//				getMatchOddsAndBTTS(mapaTipos, "draw-no");
+//				
+//				getNextGoal(mapaTipos, "time1");
+//				getNextGoal(mapaTipos, "time2");
+//				getNextGoal(mapaTipos, "no-goal");
+//				
+//				getBtts(mapaTipos, "yes");
+//				getBtts(mapaTipos, "no");
+//				
+//				getOddOrEven(mapaTipos, "odd");
+//				getOddOrEven(mapaTipos, "even");
+//				
+//				getCorrectScore(mapaTipos, "0 - 0");
+//				getCorrectScore(mapaTipos, "0 - 1");
+		
+		getRunnerPorTipo(mapaTipos, "Double Chance", "Home or Draw");
+		getRunnerPorTipo(mapaTipos, "Double Chance", "Draw or Away");
+		getRunnerPorTipo(mapaTipos, "Double Chance", "Home or Away");
+		
+		getRunnerPorTipo(mapaTipos, "Match Odds", "nomeTime1");
+		getRunnerPorTipo(mapaTipos, "Match Odds", "nomeTime2");
+		getRunnerPorTipo(mapaTipos, "Match Odds", "The Draw");
+		
+		System.out.println("Double chance x Match Odds");
+		System.out.println("\nVERIFICANDO getRunnerPorTipo(mapaTipos, \"Double Chance\", \"Home or Draw\")   x   getRunnerPorTipo(mapaTipos, \"Match Odds\", nomeTime2)");
+		verificaSurebetEAposta(getRunnerPorTipo(mapaTipos, "Double Chance", "Home or Draw"), getRunnerPorTipo(mapaTipos, "Match Odds", nomeTime2));
+		System.out.println("\nVERIFICANDO getRunnerPorTipo(mapaTipos, \"Double Chance\", \"Draw or Away\")   x   getRunnerPorTipo(mapaTipos, \"Match Odds\", nomeTime1)");
+		verificaSurebetEAposta(getRunnerPorTipo(mapaTipos, "Double Chance", "Draw or Away"), getRunnerPorTipo(mapaTipos, "Match Odds", nomeTime1));
+		System.out.println("\nVERIFICANDO getRunnerPorTipo(mapaTipos, \"Double Chance\", \"Home or Away\")   x   getRunnerPorTipo(mapaTipos, \"Match Odds\", \"The Draw\")");
+		verificaSurebetEAposta(getRunnerPorTipo(mapaTipos, "Double Chance", "Home or Away"), getRunnerPorTipo(mapaTipos, "Match Odds", "The Draw"));
+		
+		System.out.println("\nVERIFICANDO getCorrectScore(mapaTipos, \"0 - 0\")   x   getOverUnderGoals(mapaTipos, \"0.5\", \"over\")");
+		verificaSurebetEAposta(getCorrectScore(mapaTipos, "0 - 0"), getOverUnderGoals(mapaTipos, "0.5", "over"));
+		
+		System.out.println("\nVERIFICANDO getRunnerPorTipo(mapaTipos, \"Time Of First Goal\", \"No Goal\")   x   getOverUnderGoals(mapaTipos, \"0.5\", \"over\")");
+		verificaSurebetEAposta(getRunnerPorTipo(mapaTipos, "Time Of First Goal", "No Goal"), getOverUnderGoals(mapaTipos, "0.5", "over"));
+		
+		
+		System.out.println("\nVERIFICANDO getMatchOddsAndBTTS(mapaTipos, \"draw-no\")   x   getOverUnderGoals(mapaTipos, \"0.5\", \"over\")");
+		verificaSurebetEAposta(getMatchOddsAndBTTS(mapaTipos, "draw-no"), getOverUnderGoals(mapaTipos, "0.5", "over"));
+		
+		System.out.println("\nVERIFICANDO getBtts(mapaTipos, \"no\")   x   getOverUnderGoals(mapaTipos, \"0.5\", \"over\")");
+		verificaSurebetEAposta(getBtts(mapaTipos, "no"), getOverUnderGoals(mapaTipos, "0.5", "over"));
+		
+		System.out.println("\nVERIFICANDO getNextGoal(mapaTipos, \"no-goal\")   x   getOverUnderGoals(mapaTipos, \"0.5\", \"over\")");
+		verificaSurebetEAposta(getNextGoal(mapaTipos, "no-goal"), getOverUnderGoals(mapaTipos, "0.5", "over"));
+		
+		
+		/*Exemplo no jogo Inter x Napoli:
+		 *  Mercado: Inter +1
+		 *  Inter +1
+		 *  Napoli -1
+		 *  Draw
+		 */
+//				getEuropeanHandicap(mapaTipos, nomeTime1 + " +1", nomeTime2 + " -1");
+//				getAsianHandicap(mapaTipos, nomeTime1, 1.5);
+//				
+//				
+//				getEuropeanHandicap(mapaTipos, nomeTime1 + " +1", nomeTime2 + " +1");
+//				getAsianHandicap(mapaTipos, nomeTime1, -0.5);
+		
+		
+		
+		//time A negativo
+		System.out.println("\nVERIFICANDO getAsianHandicap(mapaTipos, nomeTime1, -0.5)   x   getEuropeanHandicap(mapaTipos, nomeTime2 + \" +1\", nomeTime2 + \" +1\")");
+		verificaSurebetEAposta(getAsianHandicap(mapaTipos, nomeTime1, -0.5), getEuropeanHandicap(mapaTipos, nomeTime2 + " +1", nomeTime2 + " +1"));
+		System.out.println("\nVERIFICANDO getAsianHandicap(mapaTipos, nomeTime1, -1.5)   x   getEuropeanHandicap(mapaTipos, nomeTime2 + \" +2\", nomeTime2 + \" +2\")");
+		verificaSurebetEAposta(getAsianHandicap(mapaTipos, nomeTime1, -1.5), getEuropeanHandicap(mapaTipos, nomeTime2 + " +2", nomeTime2 + " +2"));
+		System.out.println("\nVERIFICANDO getAsianHandicap(mapaTipos, nomeTime1, -2.5)   x   getEuropeanHandicap(mapaTipos, nomeTime2 + \" +3\", nomeTime2 + \" +3\")");
+		verificaSurebetEAposta(getAsianHandicap(mapaTipos, nomeTime1, -2.5), getEuropeanHandicap(mapaTipos, nomeTime2 + " +3", nomeTime2 + " +3"));
+		
+		//time A positivo
+		System.out.println("\nVERIFICANDO getAsianHandicap(mapaTipos, nomeTime1, -0.5)   x   getEuropeanHandicap(mapaTipos, nomeTime1 + \" +1\", nomeTime2 + \" -1\")");
+		verificaSurebetEAposta(getAsianHandicap(mapaTipos, nomeTime1, 1.5), getEuropeanHandicap(mapaTipos, nomeTime1 + " +1", nomeTime2 + " -1"));
+		System.out.println("\nVERIFICANDO getAsianHandicap(mapaTipos, nomeTime1, -1.5)   x   getEuropeanHandicap(mapaTipos, nomeTime1 + \" +1\", nomeTime2 + \" -2\")");
+		verificaSurebetEAposta(getAsianHandicap(mapaTipos, nomeTime1, 2.5), getEuropeanHandicap(mapaTipos, nomeTime1 + " +1", nomeTime2 + " -2"));
+		System.out.println("\nVERIFICANDO getAsianHandicap(mapaTipos, nomeTime1, -2.5)   x   getEuropeanHandicap(mapaTipos, nomeTime1 + \" +1\", nomeTime2 + \" -3\")");
+		verificaSurebetEAposta(getAsianHandicap(mapaTipos, nomeTime1, 3.5), getEuropeanHandicap(mapaTipos, nomeTime1 + " +1", nomeTime2 + " -3"));
+		
+		List<Runner> runnersAH = mapaTipos.get("Asian Handicap");
+		//\nVERIFICANDO um handicap contra o outro
+		if ( runnersAH != null ) {
+			for ( int contAH = 0; contAH < runnersAH.size(); contAH++ ) {
+				System.out.println("\nVERIFICANDO Surebet AsianHandicap " + (contAH + 1) + " de " + runnersAH.size());
+				Runner runner1 = runnersAH.get(contAH);
+				contAH++;
+				Runner runner2 = runnersAH.get(contAH);
+				System.out.println(runner1);
+				System.out.println(runner2);
+				System.out.println("------------:");
+				verificaSurebetEAposta(runner1, runner2);
+			}
+		}
+		
+		System.out.println("\n\n\n\n RESULTADO do EVENTO id: " + eventoEmProcessamento.getId() + " Nome: " + eventoEmProcessamento.getName() + " Data: " + eventoEmProcessamento.getOpenDate());
+		System.out.println("- Encontrados: " + encontradosMaiorQueZero.size());
+		System.out.println("- piorPorcentagem: " + piorPorcentagem + " e melhorPorcentagem: " + melhorPorcentagem);
+		
+		if ( piorPorcentagem < piorPorcentagemGeral ) {
+			piorPorcentagemGeral = piorPorcentagem.doubleValue();
+		}
+		
+		if ( melhorPorcentagem > melhorPorcentagemGeral ) {
+			melhorPorcentagemGeral = melhorPorcentagem.doubleValue();
+		}
+		
+		if (encontradosMaiorQueZero.size() > 0 ) {
+			encontradosMaiorQueZeroGeral.addAll(encontradosMaiorQueZero);
+		}
+		
+		
+		//FIM, vai pro próximo EVENTO
+	}
+
+
+	
 	private Runner getTimeCleanSheet(Map<String, List<Runner>> mapaTipos, String nomeTime, String tipo) {
 		List<Runner> runners = mapaTipos.get(nomeTime + " Clean Sheet");
 		if ( runners == null || runners.size() == 0) {
@@ -717,6 +908,37 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 		for (RunnerCatalog runnerCatalog : runnersCatalog) {
 			if ( placar.equals(runnerCatalog.getRunnerName())) {
 				selectedId = runnerCatalog.getSelectionId();
+				break;
+			}
+		}
+		if (selectedId == null) {
+			return null;
+		}
+		
+		for (Runner runner : runners) {
+			if ( runner.getSelectionId().compareTo(selectedId) == 0) {
+				return runner;
+			}
+		}
+		
+		return null;
+		
+	}
+	
+	private Runner getRunnerPorTipo(Map<String, List<Runner>> mapaTipos, String nomeMercado, String nomeRunner) {
+		List<Runner> runners = mapaTipos.get(nomeMercado);
+		if ( runners == null || runners.size() == 0) {
+			return null;
+		}
+		MarketBook marketBook = runners.get(0).getMarketBook();
+		MarketCatalogue marketCatalogue = markets.get(marketBook.getMarketId());
+		
+		List<RunnerCatalog> runnersCatalog = marketCatalogue.getRunners();
+		Long selectedId = null;
+		for (RunnerCatalog runnerCatalog : runnersCatalog) {
+			if ( nomeRunner.equals(runnerCatalog.getRunnerName())) {
+				selectedId = runnerCatalog.getSelectionId();
+				break;
 			}
 		}
 		if (selectedId == null) {
@@ -746,6 +968,7 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 		for (RunnerCatalog runnerCatalog : runnersCatalog) {
 			if ( tipo.equals(runnerCatalog.getRunnerName())) {
 				selectedId = runnerCatalog.getSelectionId();
+				break;
 			}
 		}
 		if (selectedId == null) {
@@ -754,6 +977,38 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 		
 		for (Runner runner : runners) {
 			if ( runner.getSelectionId().compareTo(selectedId) == 0) {
+				return runner;
+			}
+		}
+		
+		return null;
+		
+	}
+	
+	
+	private Runner getAsianHandicap(Map<String, List<Runner>> mapaTipos, String nomeTime, double handicap) {
+		List<Runner> runners = mapaTipos.get("Asian Handicap");
+		if ( runners == null || runners.size() == 0) {
+			return null;
+		}
+		MarketBook marketBook = runners.get(0).getMarketBook();
+		MarketCatalogue marketCatalogue = markets.get(marketBook.getMarketId());
+		
+		List<RunnerCatalog> runnersCatalog = marketCatalogue.getRunners();
+		Long selectedId = null;
+		for (RunnerCatalog runnerCatalog : runnersCatalog) {
+			if ( nomeTime.equals(runnerCatalog.getRunnerName())) {
+				selectedId = runnerCatalog.getSelectionId();
+				break;
+			}
+		}
+		if (selectedId == null) {
+			return null;
+		}
+		
+		for (Runner runner : runners) {
+			if ( runner.getSelectionId().compareTo(selectedId) == 0 
+					&& runner.getHandicap().doubleValue() == handicap) {
 				return runner;
 			}
 		}
@@ -773,14 +1028,16 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 		Double odd2Size = null;
 		
 		Double porcentagem = 0d;
-			
-		if ( runner1.getEx() != null 
+		
+		if ( runner1 != null 
+				&& runner1.getEx() != null 
 				&& runner1.getEx().getAvailableToBack() != null
 				&& runner1.getEx().getAvailableToBack().size() > 0) {
 			odd1TopoDaLista = runner1.getEx().getAvailableToBack().get(0).getPrice();
 			odd1Size = runner1.getEx().getAvailableToBack().get(0).getSize();
 		}
-		if ( runner2.getEx() != null 
+		if ( runner2 != null
+				&& runner2.getEx() != null 
 				&& runner2.getEx().getAvailableToBack() != null
 				&& runner2.getEx().getAvailableToBack().size() > 0) {
 			odd2TopoDaLista = runner2.getEx().getAvailableToBack().get(0).getPrice();
@@ -815,6 +1072,86 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
 				" stake1: " + stake1 + " stake2: " + stake2);
 		porcentagem = porcentagem1 < porcentagem2 ? porcentagem1 : porcentagem2;
 		System.out.println("SUREBET Porcentagem: " + decimalFormat.format(porcentagem));
+		
+		if ( porcentagem < piorPorcentagem ) {
+			piorPorcentagem = porcentagem;
+		}
+		if ( porcentagem > melhorPorcentagem ) {
+			melhorPorcentagem = porcentagem;
+		}
+		
+		if ( porcentagem > 0 ) {
+			
+			System.out.println("FAZENDO BETTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
+			System.out.println("Stake1: " + stake1);
+			System.out.println("Stake2: " + stake2);
+			
+			
+
+			MarketBook marketBookR1 = runner1.getMarketBook();
+			MarketCatalogue marketCatalogueR1 = markets.get(marketBookR1.getMarketId());
+			MarketBook marketBookR2 = runner2.getMarketBook();
+			MarketCatalogue marketCatalogueR2 = markets.get(marketBookR2.getMarketId());
+			
+			String runner1Opcao = "";
+			for (RunnerCatalog runnerCatalog : marketCatalogueR1.getRunners()) {
+				if ( runner1.getSelectionId().longValue() == runnerCatalog.getSelectionId().longValue() ) {
+					runner1Opcao = runnerCatalog.getRunnerName();
+					System.out.println("runner 1: " + runner1Opcao);
+					break;
+				}
+			}
+			
+			String runner2Opcao = "";
+			for (RunnerCatalog runnerCatalog : marketCatalogueR2.getRunners()) {
+				if ( runner2.getSelectionId().longValue() == runnerCatalog.getSelectionId().longValue() ) {
+					runner2Opcao = runnerCatalog.getRunnerName();
+					System.out.println("runner 2: " + runner2Opcao);
+					break;
+				}
+			}
+			
+			
+			String betEncontrada = "\n\nMarketId R1 = " + marketCatalogueR1.getMarketId() + " market R1 = " + marketCatalogueR1.getMarketName() + " (opção: " + runner1Opcao + ")"
+							+ "      x     " + "MarketId R2 = " + marketCatalogueR2.getMarketId() + " market R2 = " + marketCatalogueR2.getMarketName() + " (opção: " + runner2Opcao + ")" 
+							+ "\n Event: " + marketCatalogueR1.getEvent() 
+							+ "\nPorcentagem 1: " + porcentagem1 + " Porcentagem2: " + porcentagem2 +
+							" stake1: " + stake1 + " stake2: " + stake2  + " odd1Size: " + odd1Size + " odd2Size: " + odd2Size;
+			
+			System.out.println("Preços R1: " + marketCatalogueR1.getMarketName() );
+			for (PriceSize priceSize : runner1.getEx().getAvailableToBack()) {
+				System.out.println("Preço: " + priceSize.getPrice() + " Size: " + priceSize.getSize());
+			}
+			
+			System.out.println("Preços R2: " + marketCatalogueR2.getMarketName() );
+			for (PriceSize priceSize : runner2.getEx().getAvailableToBack()) {
+				System.out.println("Preço: " + priceSize.getPrice() + " Size: " + priceSize.getSize());
+			}
+			
+			
+			adicionaApostaNoCSV(betEncontrada);
+
+			encontradosMaiorQueZero.add(betEncontrada);
+			
+			
+//			String colunas = "dataEncontrado;evento;dataEvento;market1;opcao1;market2;opcao2;odds1;odds2;stake1;stakeDisponivel1;stake2;stakeDisponivel2";
+			
+			String linhaAposta = getDataEHoraAgora() 
+					+ ";" + marketCatalogueR1.getEvent().getName() 
+					+ ";" + getDataFormatada(marketCatalogueR1.getEvent().getOpenDate())
+					+ ";" + marketCatalogueR1.getMarketName() 
+					+ ";" + runner1Opcao
+					+ ";" + marketCatalogueR2.getMarketName() 
+					+ ";" + runner2Opcao
+					+ ";" + odd1
+					+ ";" + odd2
+					+ ";" + stake1
+					+ ";" + odd1Size
+					+ ";" + stake2
+					+ ";" + odd2Size
+					;
+			adicionaApostaNoCSVParaAuditoria(linhaAposta);
+		}
 		
     }
     
@@ -888,6 +1225,53 @@ EventTypeResult [eventType={id=72382,name=Bilhar}, marketCount=2]
                 System.out.println("Runner Name: "+rCat.getRunnerName()+"; Selection Id: "+rCat.getSelectionId()+"\n");
             }
         }
+    }
+    
+    public void adicionaApostaNoCSV(String texto) {
+		File file = new File ( "/home/henrique/betfair_log1.csv" );
+        PrintWriter pw = null;
+        try { 
+        	FileWriter  csvOutputFile = new FileWriter (file, true);
+	        pw = new PrintWriter(csvOutputFile);
+	        pw.println(new Date() + " - " + texto);
+        } catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if ( pw != null ) {
+				pw.close();
+			}
+		}
+    }
+    
+    public void adicionaApostaNoCSVParaAuditoria(String texto) {
+    	File file = new File ( "/home/henrique/betfair_apostas_encontradas.csv" );
+    	boolean arquivoExiste = file.exists();
+    	
+    	PrintWriter pw = null;
+    	try { 
+    		FileWriter  csvOutputFile = new FileWriter (file, true);
+    		pw = new PrintWriter(csvOutputFile);
+    		if ( !arquivoExiste ) {
+    			String colunas = "dataEncontrado;evento;dataEvento;market1;opcao1;market2;opcao2;odds1;odds2;stake1;stakeDisponivel1;stake2;stakeDisponivel2";
+    			pw.println(colunas);
+    		}
+    		pw.println(texto);
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	} finally {
+    		if ( pw != null ) {
+    			pw.close();
+    		}
+    	}
+    }
+    
+    
+    private String getDataEHoraAgora() {
+    	return new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
+    }
+    
+    private String getDataFormatada(Date data) {
+    	return new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(data);
     }
 
 }
