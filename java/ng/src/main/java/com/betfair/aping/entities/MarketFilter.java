@@ -9,6 +9,7 @@ import java.util.Set;
 public class MarketFilter {
 
 	private String textQuery;
+	private Set<String> betIds;
 	private Set<String> exchangeIds;
 	private Set<String> eventTypeIds;
 	private Set<String> marketIds;
@@ -146,6 +147,7 @@ public class MarketFilter {
 
 	public String toString() {
 		return "{" + "" + "textQuery=" + getTextQuery() + "," + "exchangeIds="
+				+ getBetIds() + "," + "betIds=" + getBetIds()
 				+ getExchangeIds() + "," + "eventTypeIds=" + getEventTypeIds()
 				+ "," + "eventIds=" + getEventIds() + "," + "competitionIds="
 				+ getCompetitionIds() + "," + "marketIds=" + getMarketIds()
@@ -158,6 +160,14 @@ public class MarketFilter {
 				+ getMarketTypeCodes() + "," + "marketStartTime="
 				+ getMarketStartTime() + "," + "withOrders=" + getWithOrders()
 				+ "," + "}";
+	}
+
+	public Set<String> getBetIds() {
+		return betIds;
+	}
+
+	public void setBetIds(Set<String> betIds) {
+		this.betIds = betIds;
 	}
 
 }

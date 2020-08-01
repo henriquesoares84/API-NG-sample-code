@@ -48,17 +48,23 @@ public class HttpUtil {
             HttpParams httpParams = httpClient.getParams();
             HttpConnectionParams.setConnectionTimeout(httpParams, new Integer(ApiNGDemo.getProp().getProperty("TIMEOUT")).intValue());
             HttpConnectionParams.setSoTimeout(httpParams, new Integer(ApiNGDemo.getProp().getProperty("TIMEOUT")).intValue());
-
-            resp = httpClient.execute(post, reqHandler);
+            
+            try {
+            	resp = httpClient.execute(post, reqHandler);
+            } catch (IOException ioE){
+            	Thread.sleep(5000);
+            	resp = httpClient.execute(post, reqHandler);
+            }
 
         } catch (UnsupportedEncodingException e1) {
-            //Do something
-
-        } catch (ClientProtocolException e) {
-            //Do something
+            e1.printStackTrace();
 
         } catch (IOException ioE){
+        	System.out.println("erro de timeout novamente?");
+        	ioE.printStackTrace();
             //Do something
+        } catch (Exception e){
+        	e.printStackTrace();
 
         }
 
@@ -72,12 +78,26 @@ public class HttpUtil {
         return  sendPostRequest(param, operation, appKey, ssoToken, apiNgURL, new RescriptResponseHandler());
 
     }
+    
+    public String sendPostRequestRescriptAccount(String param, String operation, String appKey, String ssoToken) throws APINGException{
+    	String apiNgURL = ApiNGDemo.getProp().getProperty("APING_ACCOUNT_URL") + ApiNGDemo.getProp().getProperty("RESCRIPT_SUFFIX")+operation+"/";
+    	
+    	return  sendPostRequest(param, operation, appKey, ssoToken, apiNgURL, new RescriptResponseHandler());
+    	
+    }
 
     public String sendPostRequestJsonRpc(String param, String operation, String appKey, String ssoToken) {
         String apiNgURL = ApiNGDemo.getProp().getProperty("APING_URL") + ApiNGDemo.getProp().getProperty("JSON_RPC_SUFFIX");
 
         return sendPostRequest(param, operation, appKey, ssoToken, apiNgURL, new JsonResponseHandler());
 
+    }
+    
+    public String sendPostRequestJsonRpcAccount(String param, String operation, String appKey, String ssoToken) {
+    	String apiNgURL = ApiNGDemo.getProp().getProperty("APING_ACCOUNT_URL") + ApiNGDemo.getProp().getProperty("JSON_RPC_SUFFIX");
+    	
+    	return sendPostRequest(param, operation, appKey, ssoToken, apiNgURL, new JsonResponseHandler());
+    	
     }
 
 }

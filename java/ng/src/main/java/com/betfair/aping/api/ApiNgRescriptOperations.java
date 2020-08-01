@@ -7,6 +7,7 @@ import com.betfair.aping.exceptions.APINGException;
 import com.betfair.aping.util.JsonConverter;
 import com.google.gson.reflect.TypeToken;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,23 @@ public class ApiNgRescriptOperations extends ApiNgOperations {
 
         return container;
 
+    }
+    
+    public List<PlacedOrder> listCurrentOrders(MarketFilter filter, String appKey, String ssoId) throws APINGException {
+    	Map<String, Object> params = new HashMap<String, Object>();
+    	params.put(FILTER, filter);
+    	if ( filter.getBetIds() != null) {
+    		params.put(BETIDS, filter.getBetIds());
+    	}
+    	params.put(LOCALE, locale);
+    	String result = getInstance().makeRequest(ApiNgOperation.LISTCURRENTORDERS.getOperationName(), params, appKey, ssoId);
+    	if(ApiNGDemo.isDebug())
+    		System.out.println("\nResponse: "+result);
+    	
+    	CurrentOrders container = JsonConverter.convertFromJson(result, new TypeToken<CurrentOrders>() {}.getType());
+    	
+    	return container != null && container.getCurrentOrders() != null && !container.getCurrentOrders().isEmpty() ?  container.getCurrentOrders() : Collections.EMPTY_LIST;
+    	
     }
 
     public List<MarketBook> listMarketBook(List<String> marketIds, PriceProjection priceProjection, OrderProjection orderProjection,
@@ -82,12 +100,26 @@ public class ApiNgRescriptOperations extends ApiNgOperations {
         params.put(MARKET_ID, marketId);
         params.put(INSTRUCTIONS, instructions);
         params.put(CUSTOMER_REF, customerRef);
-        String result = getInstance().makeRequest(ApiNgOperation.PLACORDERS.getOperationName(), params, appKey, ssoId);
+        String result = getInstance().makeRequest(ApiNgOperation.PLACE_ORDERS.getOperationName(), params, appKey, ssoId);
         if(ApiNGDemo.isDebug())
             System.out.println("\nResponse: "+result);
 
         return JsonConverter.convertFromJson(result, PlaceExecutionReport.class);
 
+    }
+    
+    public PlaceExecutionReport cancelOrders(String marketId, List<PlaceInstruction> instructions, String customerRef , String appKey, String ssoId) throws APINGException {
+    	Map<String, Object> params = new HashMap<String, Object>();
+    	params.put(LOCALE, locale);
+    	params.put(MARKET_ID, marketId);
+    	params.put(INSTRUCTIONS, instructions);
+    	params.put(CUSTOMER_REF, customerRef);
+    	String result = getInstance().makeRequest(ApiNgOperation.CANCEL_ORDERS.getOperationName(), params, appKey, ssoId);
+    	if(ApiNGDemo.isDebug())
+    		System.out.println("\nResponse: "+result);
+    	
+    	return JsonConverter.convertFromJson(result, PlaceExecutionReport.class);
+    	
     }
 
 
@@ -103,6 +135,25 @@ public class ApiNgRescriptOperations extends ApiNgOperations {
         //We need to pass the "sendPostRequest" method a string in util format:  requestString
         HttpUtil requester = new HttpUtil();
         String response = requester.sendPostRequestRescript(requestString, operation, appKey, ssoToken);
+        if(response != null)
+            return response;
+        else
+            throw new APINGException();
+    }
+    
+
+    protected String makeRequestAccount(String operation, Map<String, Object> params, String appKey, String ssoToken) throws APINGException {
+        String requestString;
+        //Handling the Rescript request
+        params.put("id", 1);
+
+        requestString =  JsonConverter.convertToJson(params);
+        if(ApiNGDemo.isDebug())
+            System.out.println("\nRequest: "+requestString);
+
+        //We need to pass the "sendPostRequest" method a string in util format:  requestString
+        HttpUtil requester = new HttpUtil();
+        String response = requester.sendPostRequestRescriptAccount(requestString, operation, appKey, ssoToken);
         if(response != null)
             return response;
         else

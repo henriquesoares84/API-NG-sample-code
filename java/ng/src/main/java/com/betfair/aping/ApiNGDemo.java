@@ -6,6 +6,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Properties;
 
+import com.betfair.aping.api.HttpUtil;
+import com.betfair.aping.util.HttpClientSSO;
+
 /**
  * This is a demonstration class to show a quick demo of the new Betfair API-NG.
  * When you execute the class will: <li>find a market (next horse race in the
@@ -110,6 +113,14 @@ public class ApiNGDemo {
 //            jsonRpcDemo.start(applicationKey, sessionToken);
         } else {
             ApiNGJRescriptDemo2 rescriptDemo = new ApiNGJRescriptDemo2();
+            try {
+            	System.out.println("Efetuando login...");
+				sessionToken = HttpClientSSO.login();
+			} catch (Exception e) {
+				System.out.println("Erro no login!!!!!!!!!!!!!!!");
+				e.printStackTrace();
+				System.exit(0);
+			}
             rescriptDemo.start(applicationKey, sessionToken);
         }
     }

@@ -96,7 +96,7 @@ public class ApiNgJsonRpcOperations extends ApiNgOperations{
         params.put(MARKET_ID, marketId);
         params.put(INSTRUCTIONS, instructions);
         params.put(CUSTOMER_REF, customerRef);
-        String result = getInstance().makeRequest(ApiNgOperation.PLACORDERS.getOperationName(), params, appKey, ssoId);
+        String result = getInstance().makeRequest(ApiNgOperation.PLACE_ORDERS.getOperationName(), params, appKey, ssoId);
         if(ApiNGDemo.isDebug())
             System.out.println("\nResponse: "+result);
 
@@ -126,6 +126,37 @@ public class ApiNgJsonRpcOperations extends ApiNgOperations{
         return requester.sendPostRequestJsonRpc(requestString, operation, appKey, ssoToken);
 
        }
+    
+    protected String makeRequestAccount(String operation, Map<String, Object> params, String appKey, String ssoToken) {
+    	String requestString;
+    	//Handling the JSON-RPC request
+    	JsonrpcRequest request = new JsonrpcRequest();
+    	request.setId("1");
+    	request.setMethod(ApiNGDemo.getProp().getProperty("ACCOUNT_APING_V1_0") + operation);
+    	request.setParams(params);
+    	
+    	requestString =  JsonConverter.convertToJson(request);
+    	if(ApiNGDemo.isDebug())
+    		System.out.println("\nRequest: "+requestString);
+    	
+    	//We need to pass the "sendPostRequest" method a string in util format:  requestString
+    	HttpUtil requester = new HttpUtil();
+    	return requester.sendPostRequestJsonRpcAccount(requestString, operation, appKey, ssoToken);
+    	
+    }
+
+	@Override
+	public List<PlacedOrder> listCurrentOrders(MarketFilter filter, String appKey, String ssoId) throws APINGException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public PlaceExecutionReport cancelOrders(String marketId, List<PlaceInstruction> instructions, String customerRef,
+			String appKey, String ssoId) throws APINGException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }
 
